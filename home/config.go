@@ -12,6 +12,7 @@ import (
 	"github.com/AdguardTeam/AdGuardHome/dhcpd"
 	"github.com/AdguardTeam/AdGuardHome/dnsfilter"
 	"github.com/AdguardTeam/AdGuardHome/dnsforward"
+	"github.com/AdguardTeam/AdGuardHome/querylog"
 	"github.com/AdguardTeam/AdGuardHome/stats"
 	"github.com/AdguardTeam/golibs/file"
 	"github.com/AdguardTeam/golibs/log"
@@ -70,6 +71,7 @@ type configuration struct {
 	transport        *http.Transport
 	client           *http.Client
 	stats            stats.Stats
+	queryLog         querylog.QueryLog
 
 	// cached version.json to avoid hammering github.io for each page reload
 	versionCheckJSON     []byte
@@ -175,6 +177,7 @@ var config = configuration{
 			BlockingMode:       "nxdomain", // mode how to answer filtered requests
 			BlockedResponseTTL: 10,         // in seconds
 			QueryLogEnabled:    true,
+			QueryLogInterval:   1,
 			Ratelimit:          20,
 			RefuseAny:          true,
 			BootstrapDNS:       defaultBootstrap,

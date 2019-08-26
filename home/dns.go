@@ -8,6 +8,7 @@ import (
 
 	"github.com/AdguardTeam/AdGuardHome/dnsfilter"
 	"github.com/AdguardTeam/AdGuardHome/dnsforward"
+	"github.com/AdguardTeam/AdGuardHome/querylog"
 	"github.com/AdguardTeam/AdGuardHome/stats"
 	"github.com/AdguardTeam/dnsproxy/proxy"
 	"github.com/AdguardTeam/dnsproxy/upstream"
@@ -38,7 +39,12 @@ func initDNSServer(baseDir string) {
 	if config.stats == nil {
 		log.Fatal("config.stats == nil")
 	}
-	config.dnsServer = dnsforward.NewServer(baseDir, config.stats)
+	conf := querylog.Config{
+		BaseDir:  baseDir,
+		Interval: config.DNS.QueryLogInterval * 24,
+	}
+	config.queryLog = querylog.New(conf)
+	config.dnsServer = dnsforward.NewServer(config.stats, config.queryLog)
 
 	initRDNS()
 }
@@ -184,6 +190,7 @@ func stopDNSServer() error {
 	}
 
 	config.stats.Close()
+	config.queryLog.Close()
 
 	return nil
 }
