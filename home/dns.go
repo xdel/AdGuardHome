@@ -39,6 +39,7 @@ func initDNSServer(baseDir string) {
 		log.Fatal("config.stats == nil")
 	}
 	config.dnsServer = dnsforward.NewServer(baseDir, config.stats)
+	config.auth = InitSessions()
 
 	initRDNS()
 }
@@ -184,6 +185,6 @@ func stopDNSServer() error {
 	}
 
 	config.stats.Close()
-
+	config.auth.Close()
 	return nil
 }
