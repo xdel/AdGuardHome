@@ -204,15 +204,21 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	sess := getSession()
 
-	const cookieTTL = 30 * 24 // in hours
+	const cookieTTL = 365 * 24 // in hours
 	now := time.Now().UTC()
 	expire := now.Add(cookieTTL * time.Hour)
 	expstr := expire.Format(time.RFC1123)
+	expstr = expstr[:len(expstr)-len("UTC")]
+	expstr += "GMT"
 
 	config.auth.StoreSession(sess, uint32(expire.Unix()))
 
-	s := fmt.Sprintf("session=%s; Expires=%s", hex.EncodeToString(sess), expstr)
+	s := fmt.Sprintf("session=%s; Expires=%s; Path=/", hex.EncodeToString(sess), expstr)
 	w.Header().Set("Set-Cookie", s)
+
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
 
 	returnOK(w)
 }
