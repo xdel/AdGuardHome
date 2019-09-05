@@ -1,0 +1,12 @@
+.form__group {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.form__message {
+    font-size: 11px;
+}
+
+.form__message--error {
+    color: #cd201f;
+}

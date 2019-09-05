@@ -521,4 +521,16 @@ export default class Api {
         const { path, method } = this.STATS_RESET;
         return this.makeRequest(path, method);
     }
+
+    // Login
+    LOGIN = { path: 'login', method: 'POST' };
+
+    login(data) {
+        const { path, method } = this.LOGIN;
+        const config = {
+            data,
+            headers: { 'Content-Type': 'application/json' },
+        };
+        return this.makeRequest(path, method, config);
+    }
 }

@@ -377,5 +377,10 @@
     "statistics_retention_desc": "If you decrease the interval value, some data will be lost",
     "statistics_clear": " Clear statistics",
     "statistics_clear_confirm": "Are you sure you want to clear statistics?",
-    "statistics_cleared": "Statistics successfully cleared"
+    "statistics_cleared": "Statistics successfully cleared",
+    "username_label": "Username",
+    "username_placeholder": "Enter username",
+    "password_label": "Password",
+    "password_placeholder": "Enter password",
+    "sign_in": "Sign in"
 }
