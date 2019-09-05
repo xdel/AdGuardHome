@@ -177,7 +177,6 @@ func run(args options) {
 
 	// if not configured, redirect / to /install.html, otherwise redirect /install.html to /
 	http.Handle("/", postInstallHandler(optionalAuthHandler(gziphandler.GzipHandler(http.FileServer(box)))))
-	http.Handle("/login.html", postInstallHandler(gziphandler.GzipHandler(http.FileServer(box))))
 	registerControlHandlers()
 
 	// add handlers for /install paths, we only need them when we're not configured yet

@@ -233,7 +233,9 @@ func parseCookie(cookie string) string {
 
 func optionalAuth(handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if config.AuthName != "" && config.AuthPass != "" {
+		if config.AuthName != "" && config.AuthPass != "" &&
+			r.URL.Path != "/favicon.png" &&
+			!strings.HasPrefix(r.URL.Path, "/login.") {
 			cookie := r.Header.Get("Cookie")
 			ok := false
 			if len(cookie) != 0 {
