@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/AdguardTeam/AdGuardHome/dnsfilter"
@@ -35,9 +36,9 @@ func initDNSServer(baseDir string) {
 		log.Fatalf("Cannot create DNS data dir at %s: %s", baseDir, err)
 	}
 
-	config.stats = stats.New("./data/stats.db", int(config.DNS.StatsInterval), nil)
-	if config.stats == nil {
-		log.Fatal("config.stats == nil")
+	config.stats, err = stats.New(filepath.Join(baseDir, "stats.db"), int(config.DNS.StatsInterval), nil)
+	if err != nil {
+		log.Fatal("Couldn't initialize statistics module")
 	}
 	conf := querylog.Config{
 		BaseDir:  baseDir,
