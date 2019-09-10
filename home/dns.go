@@ -35,7 +35,7 @@ func initDNSServer(baseDir string) {
 		log.Fatalf("Cannot create DNS data dir at %s: %s", baseDir, err)
 	}
 
-	config.stats = stats.New("./data/stats.db", int(config.DNS.StatsInterval), nil)
+	config.stats = stats.New("./data/stats.db", config.DNS.StatsInterval, nil)
 	if config.stats == nil {
 		log.Fatal("config.stats == nil")
 	}
