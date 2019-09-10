@@ -294,7 +294,6 @@ func (l *queryLog) fillFromFile() {
 		}
 
 		if entry.Time.Unix() < validFrom {
-			log.Printf("%d < %d", entry.Time.Unix(), validFrom)
 			continue
 		}
 

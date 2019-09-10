@@ -61,7 +61,7 @@ func handleQueryLogConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !checkStatsInterval(uint(reqData.Interval)) {
+	if !checkQueryLogInterval(reqData.Interval) {
 		httpError(w, http.StatusBadRequest, "Unsupported interval")
 		return
 	}
@@ -76,6 +76,10 @@ func handleQueryLogConfig(w http.ResponseWriter, r *http.Request) {
 	config.queryLog.Configure(conf)
 
 	returnOK(w)
+}
+
+func checkQueryLogInterval(i uint32) bool {
+	return i == 1 || i == 7 || i == 30 || i == 90
 }
 
 // RegisterQueryLogHandlers - register handlers

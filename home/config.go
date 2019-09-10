@@ -277,6 +277,10 @@ func parseConfig() error {
 		config.DNS.StatsInterval = 1
 	}
 
+	if !checkQueryLogInterval(config.DNS.QueryLogInterval) {
+		config.DNS.QueryLogInterval = 1
+	}
+
 	for _, cy := range config.Clients {
 		cli := Client{
 			Name:                cy.Name,
