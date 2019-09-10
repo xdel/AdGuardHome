@@ -612,7 +612,7 @@ func registerControlHandlers() {
 	registerRewritesHandlers()
 	RegisterBlockedServicesHandlers()
 	RegisterStatsHandlers()
-	http.Handle("/control/login", postInstallHandler(ensureHandler("POST", handleLogin)))
+	RegisterAuthHandlers()
 
 	http.HandleFunc("/dns-query", postInstall(handleDOH))
 }

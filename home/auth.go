@@ -17,6 +17,9 @@ import (
 	"go.etcd.io/bbolt"
 )
 
+const cookieTTL = 365 * 24 // in hours
+const expireTime = 30 * 24 // in hours
+
 // Auth - global object
 type Auth struct {
 	db       *bbolt.DB
@@ -122,8 +125,8 @@ func (a *Auth) StoreSession(data []byte, expire uint32) {
 	log.Debug("Auth: stored session in DB")
 }
 
-// remove session from file
-func (a *Auth) removeSession(sess []byte) {
+// RemoveSession - remove session from file
+func (a *Auth) RemoveSession(sess []byte) {
 	tx, err := a.db.Begin(true)
 	if err != nil {
 		log.Error("Auth: bbolt.Begin: %s", err)
@@ -157,6 +160,7 @@ func (a *Auth) removeSession(sess []byte) {
 // Return 0 if OK;  -1 if session doesn't exist;  1 if session has expired
 func (a *Auth) CheckSession(sess string) int {
 	now := uint32(time.Now().UTC().Unix())
+	update := false
 
 	a.lock.Lock()
 	expire, ok := a.sessions[sess]
@@ -167,11 +171,24 @@ func (a *Auth) CheckSession(sess string) int {
 	if expire <= now {
 		delete(a.sessions, sess)
 		key, _ := hex.DecodeString(sess)
-		a.removeSession(key)
+		a.RemoveSession(key)
 		a.lock.Unlock()
 		return 1
 	}
+
+	if expire/(24*60*60) != now/(24*60*60) {
+		// update expiration time
+		update = true
+		expire = now + expireTime*60*60
+		a.sessions[sess] = expire
+	}
+
 	a.lock.Unlock()
+
+	if update {
+		key, _ := hex.DecodeString(sess)
+		a.StoreSession(key, expire)
+	}
 
 	return 0
 }
@@ -204,16 +221,16 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	sess := getSession()
 
-	const cookieTTL = 365 * 24 // in hours
 	now := time.Now().UTC()
 	expire := now.Add(cookieTTL * time.Hour)
 	expstr := expire.Format(time.RFC1123)
 	expstr = expstr[:len(expstr)-len("UTC")]
 	expstr += "GMT"
 
-	config.auth.StoreSession(sess, uint32(expire.Unix()))
+	expireSess := uint32(now.Unix()) + expireTime*60*60
+	config.auth.StoreSession(sess, expireSess)
 
-	s := fmt.Sprintf("session=%s; Expires=%s; Path=/", hex.EncodeToString(sess), expstr)
+	s := fmt.Sprintf("session=%s; Expires=%s; Path=/; HttpOnly", hex.EncodeToString(sess), expstr)
 	w.Header().Set("Set-Cookie", s)
 
 	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
@@ -221,6 +238,22 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Expires", "0")
 
 	returnOK(w)
+}
+
+func handleLogout(w http.ResponseWriter, r *http.Request) {
+	cookie := r.Header.Get("Cookie")
+	sess := parseCookie(cookie)
+	key, _ := hex.DecodeString(sess)
+	config.auth.RemoveSession(key)
+	w.WriteHeader(http.StatusFound)
+	w.Header().Set("Location", "/login.html")
+	returnOK(w)
+}
+
+// RegisterAuthHandlers - register handlers
+func RegisterAuthHandlers() {
+	http.Handle("/control/login", postInstallHandler(ensureHandler("POST", handleLogin)))
+	httpRegister("POST", "/control/logout", handleLogout)
 }
 
 func parseCookie(cookie string) string {
@@ -254,8 +287,8 @@ func optionalAuth(handler func(http.ResponseWriter, *http.Request)) func(http.Re
 				}
 			}
 			if !ok {
-				w.Header().Set("Location", "/login.html")
 				w.WriteHeader(http.StatusFound)
+				w.Header().Set("Location", "/login.html")
 				return
 			}
 		}
