@@ -114,7 +114,7 @@ type Dnsfilter struct {
 
 // Filter represents a filter list
 type Filter struct {
-	ID       int64  // auto-assigned when filter is added (see nextFilterID), json by default keeps ID uppercase but we need lowercase
+	ID       int64  // auto-assigned when filter is added (see nextFilterID)
 	Data     []byte `yaml:"-"` // List of rules divided by '\n'
 	FilePath string `yaml:"-"` // Path to a filtering rules file
 }
