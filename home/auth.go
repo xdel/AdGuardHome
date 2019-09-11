@@ -23,7 +23,7 @@ const expireTime = 30 * 24 // in hours
 // Auth - global object
 type Auth struct {
 	db       *bbolt.DB
-	sessions map[string]uint32
+	sessions map[string]uint32 // session -> expiration time (in seconds)
 	lock     sync.Mutex
 }
 
@@ -68,7 +68,7 @@ func (a *Auth) loadSessions() {
 	now := uint32(time.Now().UTC().Unix())
 	forEach := func(k, v []byte) error {
 		i := binary.BigEndian.Uint32(v)
-		if i <= now || true {
+		if i <= now {
 			err = bkt.Delete(k)
 			if err != nil {
 				log.Error("Auth: bbolt.Delete: %s", err)
@@ -138,7 +138,7 @@ func (a *Auth) RemoveSession(sess []byte) {
 
 	bkt := tx.Bucket([]byte("sessions"))
 	if bkt == nil {
-		log.Error("Auth: bbolt.Bucket: %s", err)
+		log.Error("Auth: bbolt.Bucket")
 		return
 	}
 	err = bkt.Delete(sess)
@@ -176,11 +176,11 @@ func (a *Auth) CheckSession(sess string) int {
 		return 1
 	}
 
-	if expire/(24*60*60) != now/(24*60*60) {
-		// update expiration time
+	newExpire := now + expireTime*60*60
+	if expire/(24*60*60) != newExpire/(24*60*60) {
+		// update expiration time once a day
 		update = true
-		expire = now + expireTime*60*60
-		a.sessions[sess] = expire
+		a.sessions[sess] = newExpire
 	}
 
 	a.lock.Unlock()
